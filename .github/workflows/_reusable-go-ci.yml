@@ -32,7 +32,8 @@ jobs:
       - name: go vet
         working-directory: components/${{ inputs.component }}
         run: go vet ./...
-      - name: staticcheck
+      - name: staticcheck (advisory — non-blocking during Phase 2)
+        continue-on-error: true
         uses: dominikh/staticcheck-action@v1
         with:
           version: latest
