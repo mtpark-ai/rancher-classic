@@ -56,7 +56,10 @@ jobs:
       - name: build
         uses: docker/build-push-action@v6
         with:
-          context: components/${{ inputs.component }}
+          context: .
+          file: components/${{ inputs.component }}/Dockerfile
+          build-args: |
+            COMPONENT=${{ inputs.component }}
           push: false
           load: true
           tags: ${{ inputs.image-name }}:ci-${{ github.sha }}

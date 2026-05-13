@@ -51,10 +51,14 @@ image:
 	    --platform $(PLATFORM) \
 	    --build-arg VERSION=$(VERSION) \
 	    --build-arg COMMIT=$(COMMIT) \
+	    --build-arg COMPONENT=$(COMPONENT) \
 	    --tag $(IMAGE):$(VERSION) \
 	    --tag $(IMAGE):latest \
+	    --file Dockerfile \
 	    --load \
-	    .
+	    $(REPO_ROOT)
+
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
 
 clean:
 	rm -rf bin/

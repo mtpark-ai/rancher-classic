@@ -1,8 +1,11 @@
 # Shared Dockerfile template for Go components.
-# Copy to components/<name>/Dockerfile and set COMPONENT.
 #
-# Builder stage uses Debian-based Go image (for CGO if ever needed).
-# Runtime stage uses distroless static — smaller surface, no shell.
+# Build context is the REPO ROOT (not the component directory), because
+# components consume the locally-vendored third_party/ modules via go.mod
+# replace directives.
+#
+# Build with:
+#   docker buildx build --build-arg COMPONENT=<name> -f components/<name>/Dockerfile .
 
 ARG GO_VERSION=1.22-bookworm
 ARG RUNTIME_IMAGE=gcr.io/distroless/static-debian12:nonroot
@@ -15,12 +18,21 @@ ARG VERSION=dev
 ARG COMMIT=unknown
 
 WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
 
-COPY . .
+# Copy the vendored upstream modules first so Docker caches them
+# independently of component churn.
+COPY third_party/ /src/third_party/
+
+# Component source.
+COPY components/${COMPONENT}/ /src/components/${COMPONENT}/
+
+WORKDIR /src/components/${COMPONENT}
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=0 GOOS=linux go build \
         -trimpath \
         -ldflags="-s -w \

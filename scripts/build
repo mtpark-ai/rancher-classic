@@ -87,12 +87,15 @@ build_go_or_java() {
         return 0
     fi
 
+    ## Build context is the REPO ROOT so Dockerfile can COPY both
+    ## components/<comp>/ and third_party/.
     local args=(
         buildx build
         --platform "$PLATFORMS"
         --tag "$image"
         --build-arg "VERSION=$TAG"
         --build-arg "COMPONENT=$comp"
+        --file "$dir/Dockerfile"
     )
     if [ "$PUSH" -eq 1 ]; then
         args+=(--push)
@@ -100,7 +103,7 @@ build_go_or_java() {
         args+=(--load)
     fi
 
-    ( cd "$dir" && docker "${args[@]}" . )
+    ( cd "$REPO_ROOT" && docker "${args[@]}" . )
     echo "$image" >> "$MANIFEST"
 }
 
