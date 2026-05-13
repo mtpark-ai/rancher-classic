@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -ldflags="-s -w \
                   -X main.version=${VERSION} \
                   -X main.commit=${COMMIT}" \
-        -o /out/${COMPONENT} ./...
+        -o /out/${COMPONENT} .
 
 # ------------- runtime -------------
 FROM ${RUNTIME_IMAGE}
