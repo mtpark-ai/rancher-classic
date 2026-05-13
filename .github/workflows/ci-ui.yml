@@ -1,5 +1,14 @@
 name: ui
 
+# Phase 7 blocked — see components/ui/README.md
+#
+# components/ui/ has not been seeded yet (the upstream rancher/ui default
+# branch is Rancher 2 UI work; the correct 1.6.x baseline ref is a Phase-1
+# follow-up). Until then, running `npm ci + ember build` is meaningless.
+#
+# When Phase 7 is ready, replace the `notice` job below with the real
+# Ember build steps.
+
 on:
   push:
     paths: ["components/ui/**"]
@@ -8,22 +17,11 @@ on:
     paths: ["components/ui/**"]
 
 jobs:
-  build:
-    name: ember build (Node 20)
+  notice:
+    name: Phase-7 blocked (no build attempted)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: components/ui/package-lock.json
-      - name: npm ci
-        working-directory: components/ui
-        run: npm ci
-      - name: ember build
-        working-directory: components/ui
-        run: npx ember build --environment=production
-      - name: smoke test
-        working-directory: components/ui
-        run: npx ember test --launch chrome || true
+      - run: |
+          echo "::notice::ui is Phase-7 blocked. See components/ui/README.md"
+          test -f components/ui/README.md
