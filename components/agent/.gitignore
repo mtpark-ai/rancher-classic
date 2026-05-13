@@ -1,0 +1,13 @@
+/.dapper
+/bin
+/dist
+*.swp
+/.trash-cache
+.idea/*
+*.py[cod]
+tests/.cache
+tests/.tox
+tests/.venv
+tests/.idea
+agent
+agent.iml

@@ -1,0 +1,6 @@
+./bin
+./.dapper
+./dist
+./.trash-cache
+./tests/.tox
+./tests/.venv

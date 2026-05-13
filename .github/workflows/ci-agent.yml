@@ -1,5 +1,8 @@
 name: agent
 
+# Phase 4 blocked — see components/agent/PHASE-4-BLOCKED.md
+# The CI run will fail until Phase 4 modernizes the Docker SDK call sites.
+
 on:
   push:
     paths: ["components/agent/**", ".github/workflows/_reusable-go-ci.yml"]
@@ -13,3 +16,10 @@ jobs:
     with:
       component: agent
       image-name: rancher-classic/agent
+  status:
+    name: Phase-4 blocked (advisory only)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - run: |
+          echo "agent is Phase-4 blocked. See components/agent/PHASE-4-BLOCKED.md"
