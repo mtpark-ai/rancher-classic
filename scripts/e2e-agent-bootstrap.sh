@@ -13,10 +13,10 @@ set -e
 dockerd-entrypoint.sh &
 DOCKERD_PID=$!
 
-i=0
+attempts=0
 until docker info >/dev/null 2>&1; do
-    i=$((i + 1))
-    if [ "$i" -gt 30 ]; then
+    attempts=$((attempts + 1))
+    if [ "$attempts" -gt 30 ]; then
         echo "dockerd did not become ready in 30s" >&2
         exit 1
     fi
@@ -25,10 +25,10 @@ done
 
 echo "[$AGENT_NAME] dockerd up. registering with $CATTLE_URL"
 
-i=0
+attempts=0
 until curl -fsSL "$CATTLE_URL/" >/dev/null 2>&1; do
-    i=$((i + 1))
-    if [ "$i" -gt 60 ]; then
+    attempts=$((attempts + 1))
+    if [ "$attempts" -gt 60 ]; then
         echo "cattle server did not respond in 60s" >&2
         exit 1
     fi

@@ -6,7 +6,6 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CATTLE_URL="${CATTLE_URL:-http://127.0.0.1:8080/v2-beta}"
 
 STACK_NAME="${STACK_NAME:-e2e-nginx}"
