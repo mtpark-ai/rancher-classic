@@ -1,5 +1,8 @@
 name: host-api
 
+# Phase 4 blocked — see components/host-api/PHASE-4-BLOCKED.md
+# Re-enable when Phase 4 modernizes JWT + Docker SDK call sites.
+
 on:
   push:
     paths: ["components/host-api/**", ".github/workflows/_reusable-go-ci.yml"]
@@ -13,3 +16,11 @@ jobs:
     with:
       component: host-api
       image-name: rancher-classic/host-api
+  status:
+    name: Phase-4 blocked (advisory only)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - run: |
+          echo "host-api is Phase-4 blocked. See components/host-api/PHASE-4-BLOCKED.md"
+          echo "The reusable CI above will fail until the Docker SDK + JWT migration lands."

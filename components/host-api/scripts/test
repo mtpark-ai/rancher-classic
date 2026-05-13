@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+cd $(dirname $0)/..
+
+if [ -x "$(which wrapdocker)" ]; then
+    wrapdocker > /tmp/docker.log 2>&1
+    docker ps -q
+fi
+
+if [[ ! -e /host/proc/ ]]; then
+    mkdir -p /host
+    ln -s /proc /host/proc
+fi
+
+docker run -i -d busybox:1
+
+go test -timeout 30s -v ./...
+
+echo OK

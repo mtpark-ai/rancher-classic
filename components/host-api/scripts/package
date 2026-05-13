@@ -1,0 +1,24 @@
+#!/bin/bash
+set -e
+
+cd $(dirname $0)/..
+
+ARCH=${ARCH:?"ARCH not set"}
+SUFFIX=""
+[ "${ARCH}" != "amd64" ] && SUFFIX="_${ARCH}"
+CONTENT=$(</proc/sys/kernel/random/uuid)
+
+rm -rf dist/artifacts
+
+mkdir -p build/${CONTENT}
+mkdir -p dist/artifacts
+
+cp -rf apply.sh bin build/${CONTENT}
+
+cd build
+
+sha1sum -b $(find ${CONTENT} -type f) > ${CONTENT}/SHA1SUMS
+sha1sum ${CONTENT}/SHA1SUMS > ${CONTENT}/SHA1SUMSSUM
+
+tar czf ../dist/artifacts/host-api${SUFFIX}.tar.gz ${CONTENT}
+echo Created dist/artifacts/host-api${SUFFIX}.tar.gz
