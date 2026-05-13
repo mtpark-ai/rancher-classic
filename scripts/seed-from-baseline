@@ -42,14 +42,18 @@ for comp in "$@"; do
     fi
 
     echo "seed   $comp <- baseline/$comp"
-    ## copy everything except .git, keep templated files in place
-    rsync -a \
-        --exclude='.git/' \
-        --exclude='Dockerfile' \
-        --exclude='Makefile' \
-        --exclude='go.mod' \
-        --exclude='README.md' \
-        "$src/" "$dst/"
+    ## copy everything except .git and template files we already created
+    ## use cp -a + post-prune to avoid rsync dependency
+    (
+        cd "$src"
+        # use tar to selectively copy with exclusions
+        tar --exclude='.git' \
+            --exclude='Dockerfile' \
+            --exclude='Makefile' \
+            --exclude='go.mod' \
+            --exclude='README.md' \
+            -cf - . | tar -xf - -C "$dst"
+    )
     echo "seeded from baseline/$comp at $(cd "$src" && git rev-parse HEAD)" > "$marker"
 done
 

@@ -32,7 +32,7 @@ all: build
 
 build:
 	@mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux go build $(GOFLAGS) -ldflags="$(LDFLAGS)" -o bin/$(COMPONENT) ./...
+	CGO_ENABLED=0 GOOS=linux go build $(GOFLAGS) -ldflags="$(LDFLAGS)" -o bin/$(COMPONENT) .
 
 test:
 	go vet ./...
