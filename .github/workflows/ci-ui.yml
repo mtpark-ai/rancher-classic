@@ -11,10 +11,10 @@ name: ui
 
 on:
   push:
-    paths: ["components/ui/**"]
+    paths: ["components/ui/**", ".github/workflows/ci-ui.yml"]
     branches: [main]
   pull_request:
-    paths: ["components/ui/**"]
+    paths: ["components/ui/**", ".github/workflows/ci-ui.yml"]
 
 jobs:
   notice:

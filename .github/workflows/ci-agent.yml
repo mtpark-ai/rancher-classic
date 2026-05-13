@@ -16,7 +16,7 @@ name: agent
 
 on:
   push:
-    paths: ["components/agent/**", ".github/workflows/_reusable-go-ci.yml"]
+    paths: ["components/agent/**", ".github/workflows/ci-agent.yml", ".github/workflows/_reusable-go-ci.yml"]
     branches: [main]
   pull_request:
     paths: ["components/agent/**"]

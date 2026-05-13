@@ -16,7 +16,7 @@ name: host-api
 
 on:
   push:
-    paths: ["components/host-api/**", ".github/workflows/_reusable-go-ci.yml"]
+    paths: ["components/host-api/**", ".github/workflows/ci-host-api.yml", ".github/workflows/_reusable-go-ci.yml"]
     branches: [main]
   pull_request:
     paths: ["components/host-api/**"]
