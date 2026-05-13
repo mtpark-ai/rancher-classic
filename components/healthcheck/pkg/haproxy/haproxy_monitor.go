@@ -26,7 +26,7 @@ func (h *Monitor) Stats() ([]Stat, error) {
 	}
 
 	if len(lines) == 0 || !strings.HasPrefix(lines[0], "# ") {
-		return nil, fmt.Errorf("Failed to find stats")
+		return nil, fmt.Errorf("failed to find stats")
 	}
 
 	keys := strings.Split(strings.TrimPrefix(lines[0], "# "), ",")

@@ -23,7 +23,7 @@ func Poll(metadataURL string) error {
 		return err
 	}
 	if client == nil {
-		return fmt.Errorf("Can not create RancherClient, No credentials found")
+		return fmt.Errorf("cannot create RancherClient: no credentials found")
 	}
 
 	metadataPoller := &metadata.Poller{}
