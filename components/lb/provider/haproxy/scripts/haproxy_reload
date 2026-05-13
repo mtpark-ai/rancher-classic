@@ -1,0 +1,63 @@
+#!/bin/bash
+set -e
+
+reload_haproxy(){
+    # start rsyslog if not running 
+    if [[ $(pgrep rsyslog | wc -l) != 1 ]]; then
+        rm -f /run/rsyslogd.pid
+        rsyslogd -f /etc/haproxy/rsyslogd.conf > /dev/null
+    fi
+
+    if [ ! -f /run/haproxy.pid ] || [ $2 == "start" ]; then
+        if service haproxy start; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+    # reload service
+    if service haproxy reload; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+apply_config()
+{
+    # apply new config
+    if [ $2 == "start" ]; then
+        echo "starting haproxy"
+        reload_haproxy $1 $2
+    elif ! cmp -s $1 /etc/haproxy/haproxy_new.cfg  ; then
+        echo "reloading haproxy config with the new config changes"
+        reapply $1 $2
+    elif ! diff -q /etc/haproxy/certs/new /etc/haproxy/certs/current > /dev/null  2>&1; then
+        echo "reloading haproxy config with the certificates changes"
+        reapply $1 $2
+    else
+        cleanup_temp_certs
+        return 0
+    fi
+}
+
+reapply() {
+    copy_data $1
+    reload_haproxy $1 $2
+}
+
+cleanup_temp_certs() {
+    rm -f /etc/haproxy/certs/new/*
+}
+
+copy_data()
+{
+    # copy certificates
+    rm -f /etc/haproxy/certs/current/*
+    cp -r /etc/haproxy/certs/new/. /etc/haproxy/certs/current
+    cleanup_temp_certs
+    # copy new haproxy config
+    cp -r /etc/haproxy/haproxy_new.cfg  $1
+}
+
+apply_config $1 $2

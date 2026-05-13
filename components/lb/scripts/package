@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+
+ARCH=${ARCH:?"ARCH not set"}
+SUFFIX=""
+[ "${ARCH}" != "amd64" ] && SUFFIX="_${ARCH}"
+
+source $(dirname $0)/version
+
+cd $(dirname $0)/../package
+
+TAG=${TAG:-${VERSION}${SUFFIX}}
+REPO=${REPO:-rancher}
+
+if [ ! -e ../bin/lb-controller ]; then
+    ../scripts/build
+fi
+
+echo "" > ../dist/images
+
+for dir in */
+do
+    cd $dir
+    provider_type=${dir%/}
+    cp ../../bin/lb-controller .
+    cp -r ../../provider/${provider_type}/scripts scripts
+    cp -r ../../provider/${provider_type}/config config
+    IMAGE=${REPO}/lb-service-${provider_type}:${TAG}
+    docker build -t $IMAGE .
+    echo ${IMAGE} >> ../../dist/images
+    echo Built $IMAGE
+    cd ..
+done
