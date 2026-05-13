@@ -1,0 +1,38 @@
+{
+    "resourceFields": {
+        "name":{
+            "type": "string",
+            "required": true,
+            "nullable": false,
+            "unique": true,
+            "attributes" : {
+                "scheduleUpdate" : true
+            }
+        },
+        "publicValue":{
+            "type": "string",
+            "required": true,
+            "nullable": false,
+            "attributes" : {
+                "scheduleUpdate" : true
+            }
+        },
+        "secretValue":{
+            "type": "string",
+            "required": true,
+            "nullable": false,
+            "attributes" : {
+                "scheduleUpdate" : true
+            }
+        },
+        "local":{
+            "type": "boolean",
+            "required": false,
+            "nullable": true,
+            "default": false,
+            "attributes" : {
+                "scheduleUpdate" : true
+            }
+        }
+    }
+}

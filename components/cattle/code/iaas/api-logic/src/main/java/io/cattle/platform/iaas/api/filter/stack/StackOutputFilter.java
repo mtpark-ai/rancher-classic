@@ -1,0 +1,80 @@
+package io.cattle.platform.iaas.api.filter.stack;
+
+import io.cattle.platform.api.utils.ApiUtils;
+import io.cattle.platform.core.constants.ServiceConstants;
+import io.cattle.platform.core.dao.StackDao;
+import io.cattle.platform.core.model.Stack;
+import io.cattle.platform.iaas.api.filter.common.CachedOutputFilter;
+import io.cattle.platform.iaas.api.infrastructure.InfrastructureAccessManager;
+import io.cattle.platform.object.ObjectManager;
+import io.cattle.platform.object.meta.ObjectMetaDataManager;
+import io.cattle.platform.object.util.DataAccessor;
+import io.github.ibuildthecloud.gdapi.context.ApiContext;
+import io.github.ibuildthecloud.gdapi.model.Resource;
+import io.github.ibuildthecloud.gdapi.request.ApiRequest;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+public class StackOutputFilter extends CachedOutputFilter<Map<Long, List<Object>>> {
+
+    @Inject
+    StackDao stackDao;
+    @Inject
+    ObjectManager objectManager;
+    @Inject
+    InfrastructureAccessManager infraAccess;
+
+    @Override
+    public Class<?>[] getTypeClasses() {
+        return new Class<?>[] { Stack.class };
+    }
+
+    @Override
+    public String[] getTypes() {
+        return new String[] {};
+    }
+
+    @Override
+    public Resource filter(ApiRequest request, Object original, Resource converted) {
+        if (request == null) {
+            return converted;
+        }
+
+        if (DataAccessor.fromMap(converted.getFields()).withKey(ObjectMetaDataManager.SYSTEM_FIELD).as(Boolean.class) &&
+                !infraAccess.canModifyInfrastructure(ApiUtils.getPolicy())) {
+            converted.getActions().clear();
+        }
+
+        if ("v1".equals(request.getVersion())) {
+            return converted;
+        }
+
+        if (original instanceof Stack) {
+            converted.getFields().put(ServiceConstants.STACK_FIELD_SERVICE_IDS,
+                    getCached(request).get(((Stack) original).getId()));
+        }
+        return converted;
+    }
+
+    @Override
+    protected Map<Long, List<Object>> newObject(ApiRequest apiRequest) {
+        if (apiRequest == null) {
+            return new HashMap<>();
+        }
+        List<Long> ids = getIds(apiRequest);
+        return stackDao.getServicesForStack(ids, ApiContext.getContext().getIdFormatter());
+    }
+
+    @Override
+    protected Long getId(Object obj) {
+        if (obj instanceof Stack) {
+            return ((Stack) obj).getId();
+        }
+        return null;
+    }
+
+}

@@ -1,0 +1,11 @@
+{
+	"resourceFields": {
+		"linkedAccountUuid": {
+			"type": "string",
+			"create": true,
+			"default": false
+		}
+	}
+}
+
+
