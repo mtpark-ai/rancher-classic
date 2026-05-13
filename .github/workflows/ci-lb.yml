@@ -1,0 +1,15 @@
+name: lb
+
+on:
+  push:
+    paths: ["components/lb/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/lb/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: lb
+      image-name: rancher-classic/lb

@@ -1,0 +1,15 @@
+name: net
+
+on:
+  push:
+    paths: ["components/net/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/net/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: net
+      image-name: rancher-classic/net

@@ -1,0 +1,24 @@
+name: catalog
+
+on:
+  push:
+    paths: ["components/catalog/**"]
+    branches: [main]
+  pull_request:
+    paths: ["components/catalog/**"]
+
+jobs:
+  lint:
+    name: lint catalog YAML
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: yamllint
+        run: pipx run yamllint -d "{rules: {line-length: disable, document-start: disable}}" components/catalog/
+      - name: docker-compose syntax
+        run: |
+          set -e
+          for f in $(find components/catalog -name docker-compose.yml); do
+            echo "==> $f"
+            docker compose -f "$f" config > /dev/null
+          done

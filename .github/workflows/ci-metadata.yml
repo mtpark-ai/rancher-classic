@@ -1,0 +1,15 @@
+name: metadata
+
+on:
+  push:
+    paths: ["components/metadata/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/metadata/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: metadata
+      image-name: rancher-classic/metadata

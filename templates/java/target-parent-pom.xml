@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Target dependency versions for rancher-classic 1.7.0 Cattle fork.
+  This file is NOT a working Maven build - it is a REFERENCE that documents
+  the version bumps to be applied to baseline/cattle/code/meta-parent/pom.xml
+  during Phase 3 (Cattle Java modernization).
+
+  Diff summary vs. upstream cattle v0.183.52.1:
+    - Java 1.8         → 17 LTS
+    - Spring 4.3.2     → 6.1.x         (javax → jakarta migration required)
+    - Jetty 9.2.11     → 12.0.x        (Servlet 6 / Jakarta EE 10)
+    - JOOQ 3.3.0       → 3.19.x        (codegen output changes; full regen)
+    - Jackson 2.5.3    → 2.17.x
+    - docker-java 1.1.0→ 3.4.x         (docker-java-transport-httpclient5)
+    - Hazelcast 3.8    → 5.5.x
+    - Curator 2.10.0   → 5.7.x         (or drop if ZooKeeper coordination not needed)
+    - Liquibase        → 4.29.x
+    - JUnit 4          → 5.10.x (jupiter)
+    - Mockito          → 5.x
+    - JMX trans        → remove (replaced by Micrometer)
+    - logback-gelf     → remove (graylog stack not part of 1.7 default)
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.cattle.classic</groupId>
+    <artifactId>cattle-meta-parent</artifactId>
+    <version>1.7.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>rancher-classic / Cattle</name>
+    <url>https://github.com/rancher-classic/cattle</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- core frameworks -->
+        <spring.version>6.1.14</spring.version>
+        <jetty.version>12.0.14</jetty.version>
+        <jooq.version>3.19.13</jooq.version>
+        <jackson.version>2.17.2</jackson.version>
+        <hazelcast.version>5.5.0</hazelcast.version>
+
+        <!-- Docker SDK -->
+        <docker-java.version>3.4.0</docker-java.version>
+
+        <!-- DB / migrations -->
+        <liquibase.version>4.29.2</liquibase.version>
+        <mysql-jdbc.version>9.0.0</mysql-jdbc.version>
+        <mariadb-jdbc.version>3.4.1</mariadb-jdbc.version>
+
+        <!-- HTTP client (replaces docker-java's Netty transport) -->
+        <httpclient5.version>5.4</httpclient5.version>
+
+        <!-- testing -->
+        <junit-jupiter.version>5.11.0</junit-jupiter.version>
+        <mockito.version>5.14.2</mockito.version>
+        <testcontainers.version>1.20.2</testcontainers.version>
+
+        <!-- observability -->
+        <slf4j.version>2.0.16</slf4j.version>
+        <logback.version>1.5.8</logback.version>
+        <micrometer.version>1.13.5</micrometer.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring 6 BOM (drives jakarta.* package usage) -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Jackson BOM -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- JOOQ -->
+            <dependency>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq</artifactId>
+                <version>${jooq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen</artifactId>
+                <version>${jooq.version}</version>
+            </dependency>
+
+            <!-- docker-java -->
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-core</artifactId>
+                <version>${docker-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-transport-httpclient5</artifactId>
+                <version>${docker-java.version}</version>
+            </dependency>
+
+            <!-- Jetty 12 (Servlet 6 / Jakarta) -->
+            <dependency>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-servlet</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <!-- Hazelcast -->
+            <dependency>
+                <groupId>com.hazelcast</groupId>
+                <artifactId>hazelcast</artifactId>
+                <version>${hazelcast.version}</version>
+            </dependency>
+
+            <!-- Liquibase -->
+            <dependency>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-core</artifactId>
+                <version>${liquibase.version}</version>
+            </dependency>
+
+            <!-- testing -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- observability -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-core</artifactId>
+                <version>${micrometer.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <release>17</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <!-- OpenRewrite for javax → jakarta sweep -->
+                <plugin>
+                    <groupId>org.openrewrite.maven</groupId>
+                    <artifactId>rewrite-maven-plugin</artifactId>
+                    <version>5.43.0</version>
+                    <configuration>
+                        <activeRecipes>
+                            <recipe>org.openrewrite.java.migrate.UpgradeToJava17</recipe>
+                            <recipe>org.openrewrite.java.migrate.jakarta.JavaxMigrationToJakarta</recipe>
+                            <recipe>org.openrewrite.java.spring.framework.UpgradeSpringFramework_6_0</recipe>
+                        </activeRecipes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+## Top-level build orchestrator for rancher-classic 1.7.0.
+##
+## Builds component images in dependency order and writes a manifest to
+## dist/images.txt with the resulting image refs.
+##
+## Usage:
+##   scripts/build                       # build everything
+##   scripts/build --only cattle agent   # build a subset
+##   scripts/build --tag v1.7.0-rc.1     # custom tag (default: VERSION file)
+##   scripts/build --push                # push to ghcr.io after build
+##   scripts/build --platforms linux/amd64,linux/arm64
+##
+## Exit codes: 0 success, non-zero on first failing component.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO_ROOT"
+
+## Dependency order. Cattle is heaviest; build it first so failures surface
+## early. UI and catalog are pure assets and come last.
+COMPONENTS_ALL=(
+    cattle
+    agent
+    host-api
+    healthcheck
+    scheduler
+    metadata
+    dns
+    net
+    lb
+    ui
+    catalog
+)
+
+ORG="${ORG:-mtpark-ai}"
+TAG="$(cat "$REPO_ROOT/VERSION")"
+PLATFORMS="linux/amd64"
+PUSH=0
+ONLY=()
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --tag)        TAG="$2";        shift 2 ;;
+        --platforms)  PLATFORMS="$2";  shift 2 ;;
+        --push)       PUSH=1;          shift ;;
+        --only)       shift
+                      while [ $# -gt 0 ] && [[ "$1" != --* ]]; do
+                          ONLY+=("$1"); shift
+                      done ;;
+        --all)        ONLY=();         shift ;;
+        -h|--help)
+            sed -n 's/^##\s\?//p' "$0" | head -20
+            exit 0 ;;
+        *)
+            echo "unknown arg: $1" >&2
+            exit 2 ;;
+    esac
+done
+
+if [ ${#ONLY[@]} -eq 0 ]; then
+    TO_BUILD=("${COMPONENTS_ALL[@]}")
+else
+    TO_BUILD=("${ONLY[@]}")
+fi
+
+mkdir -p "$REPO_ROOT/dist"
+MANIFEST="$REPO_ROOT/dist/images.txt"
+: > "$MANIFEST"
+
+echo "===> rancher-classic build"
+echo "     tag       : $TAG"
+echo "     platforms : $PLATFORMS"
+echo "     push      : $PUSH"
+echo "     components: ${TO_BUILD[*]}"
+echo
+
+build_go_or_java() {
+    local comp="$1"
+    local dir="$REPO_ROOT/components/$comp"
+    local image="ghcr.io/$ORG/rancher-classic/$comp:$TAG"
+
+    echo "---- $comp ----"
+    if [ ! -f "$dir/Dockerfile" ]; then
+        echo "  skip (no Dockerfile yet, Phase 2 incomplete)"
+        return 0
+    fi
+
+    local args=(
+        buildx build
+        --platform "$PLATFORMS"
+        --tag "$image"
+        --build-arg "VERSION=$TAG"
+        --build-arg "COMPONENT=$comp"
+    )
+    if [ "$PUSH" -eq 1 ]; then
+        args+=(--push)
+    else
+        args+=(--load)
+    fi
+
+    ( cd "$dir" && docker "${args[@]}" . )
+    echo "$image" >> "$MANIFEST"
+}
+
+build_catalog() {
+    ## catalog is just YAML; package as tar.gz
+    local comp="catalog"
+    local dir="$REPO_ROOT/components/$comp"
+    local out="$REPO_ROOT/dist/catalog-${TAG}.tar.gz"
+    echo "---- $comp ----"
+    if [ ! -d "$dir/infra-templates" ]; then
+        echo "  skip (Phase 6 incomplete)"
+        return 0
+    fi
+    tar -czf "$out" -C "$dir" .
+    echo "file://$out" >> "$MANIFEST"
+}
+
+for comp in "${TO_BUILD[@]}"; do
+    case "$comp" in
+        catalog) build_catalog ;;
+        *)       build_go_or_java "$comp" ;;
+    esac
+done
+
+echo
+echo "===> done. manifest:"
+cat "$MANIFEST"

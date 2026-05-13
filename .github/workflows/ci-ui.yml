@@ -1,0 +1,29 @@
+name: ui
+
+on:
+  push:
+    paths: ["components/ui/**"]
+    branches: [main]
+  pull_request:
+    paths: ["components/ui/**"]
+
+jobs:
+  build:
+    name: ember build (Node 20)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: components/ui/package-lock.json
+      - name: npm ci
+        working-directory: components/ui
+        run: npm ci
+      - name: ember build
+        working-directory: components/ui
+        run: npx ember build --environment=production
+      - name: smoke test
+        working-directory: components/ui
+        run: npx ember test --launch chrome || true

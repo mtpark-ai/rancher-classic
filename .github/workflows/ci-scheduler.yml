@@ -1,0 +1,15 @@
+name: scheduler
+
+on:
+  push:
+    paths: ["components/scheduler/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/scheduler/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: scheduler
+      image-name: rancher-classic/scheduler

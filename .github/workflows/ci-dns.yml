@@ -1,0 +1,15 @@
+name: dns
+
+on:
+  push:
+    paths: ["components/dns/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/dns/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: dns
+      image-name: rancher-classic/dns

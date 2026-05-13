@@ -1,0 +1,67 @@
+name: Reusable Go CI
+
+on:
+  workflow_call:
+    inputs:
+      component:
+        description: "Subdirectory under components/ (agent, host-api, ...)"
+        required: true
+        type: string
+      go-version:
+        required: false
+        type: string
+        default: "1.22"
+      image-name:
+        description: "ghcr.io image name without registry prefix"
+        required: true
+        type: string
+
+jobs:
+  lint-test:
+    name: lint + test (Ubuntu 24.04)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: components/${{ inputs.component }}/go.sum
+      - name: gofmt
+        working-directory: components/${{ inputs.component }}
+        run: test -z "$(gofmt -l .)" || (gofmt -d . && exit 1)
+      - name: go vet
+        working-directory: components/${{ inputs.component }}
+        run: go vet ./...
+      - name: staticcheck
+        uses: dominikh/staticcheck-action@v1
+        with:
+          version: latest
+          working-directory: components/${{ inputs.component }}
+      - name: go test
+        working-directory: components/${{ inputs.component }}
+        run: go test -race -count=1 ./...
+
+  image-build:
+    name: image build (Docker ${{ matrix.docker }})
+    runs-on: ubuntu-24.04
+    needs: lint-test
+    strategy:
+      fail-fast: false
+      matrix:
+        docker: ["25", "27"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: build
+        uses: docker/build-push-action@v6
+        with:
+          context: components/${{ inputs.component }}
+          push: false
+          load: true
+          tags: ${{ inputs.image-name }}:ci-${{ github.sha }}
+          cache-from: type=gha,scope=${{ inputs.component }}
+          cache-to: type=gha,scope=${{ inputs.component }},mode=max
+      - name: smoke-run on Docker ${{ matrix.docker }}
+        run: |
+          docker --version
+          docker run --rm ${{ inputs.image-name }}:ci-${{ github.sha }} --version || true

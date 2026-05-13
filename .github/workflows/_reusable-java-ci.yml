@@ -1,0 +1,62 @@
+name: Reusable Java CI (Cattle)
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        required: false
+        type: string
+        default: "17"
+      image-name:
+        required: true
+        type: string
+
+jobs:
+  build-test:
+    name: maven verify (Java ${{ inputs.java-version }})
+    runs-on: ubuntu-24.04
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: cattle
+          MARIADB_DATABASE: cattle
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=3s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+          cache: maven
+      - name: maven verify
+        working-directory: components/cattle
+        env:
+          CATTLE_DB_CATTLE_MYSQL_HOST: 127.0.0.1
+          CATTLE_DB_CATTLE_MYSQL_PORT: 3306
+          CATTLE_DB_CATTLE_USERNAME: root
+          CATTLE_DB_CATTLE_PASSWORD: cattle
+        run: ./mvnw -B -ntp verify
+
+  image-build:
+    name: image build (Docker ${{ matrix.docker }})
+    runs-on: ubuntu-24.04
+    needs: build-test
+    strategy:
+      fail-fast: false
+      matrix:
+        docker: ["25", "27"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: components/cattle
+          push: false
+          load: true
+          tags: ${{ inputs.image-name }}:ci-${{ github.sha }}
+          cache-from: type=gha,scope=cattle
+          cache-to: type=gha,scope=cattle,mode=max

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+## Seed component directories from their baseline upstream clones.
+##
+## Run AFTER scaffold (Phase 1) but BEFORE modernization work begins on a
+## component. Copies the upstream source tree into components/<name>/
+## while preserving the templates already in place (Makefile, Dockerfile,
+## go.mod, README.md).
+##
+## Idempotent: re-running on a seeded component is a no-op unless --force.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+FORCE=0
+
+if [ "${1:-}" = "--force" ]; then
+    FORCE=1; shift
+fi
+
+if [ $# -lt 1 ]; then
+    echo "usage: $0 [--force] <component> [<component>...]" >&2
+    exit 2
+fi
+
+## map: component -> baseline subdir (1:1 except cattle = baseline/cattle)
+for comp in "$@"; do
+    src="$REPO_ROOT/baseline/$comp"
+    dst="$REPO_ROOT/components/$comp"
+    if [ ! -d "$src" ]; then
+        echo "error: no baseline at $src" >&2
+        exit 1
+    fi
+    if [ ! -d "$dst" ]; then
+        echo "error: no component dir at $dst" >&2
+        exit 1
+    fi
+
+    marker="$dst/.seeded"
+    if [ -f "$marker" ] && [ "$FORCE" -ne 1 ]; then
+        echo "skip   $comp (already seeded; pass --force to re-seed)"
+        continue
+    fi
+
+    echo "seed   $comp <- baseline/$comp"
+    ## copy everything except .git, keep templated files in place
+    rsync -a \
+        --exclude='.git/' \
+        --exclude='Dockerfile' \
+        --exclude='Makefile' \
+        --exclude='go.mod' \
+        --exclude='README.md' \
+        "$src/" "$dst/"
+    echo "seeded from baseline/$comp at $(cd "$src" && git rev-parse HEAD)" > "$marker"
+done
+
+echo "done."

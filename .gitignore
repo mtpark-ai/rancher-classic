@@ -1,0 +1,49 @@
+## Build artifacts
+dist/
+bin/
+build/
+target/
+out/
+
+## Go
+*.test
+*.out
+vendor/
+
+## Java
+*.class
+*.jar
+*.war
+.gradle/
+.m2/
+
+## Node / Ember
+node_modules/
+tmp/
+dist/
+
+## IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Local dev
+.env
+.env.local
+*.log
+*.pid
+
+## Baseline (read-only upstream clones; not tracked)
+baseline/
+
+## Generated SBOM / image lists
+*.sbom.json
+*.spdx.json
+dist/images.txt

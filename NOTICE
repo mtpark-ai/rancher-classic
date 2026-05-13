@@ -1,0 +1,30 @@
+rancher-classic
+Copyright 2026 The rancher-classic Authors.
+
+This product is a fork of Rancher 1.x (https://github.com/rancher/rancher,
+https://github.com/rancher/cattle and related repositories), which is
+Copyright (c) Rancher Labs, Inc. and licensed under the Apache License,
+Version 2.0.
+
+The original upstream baseline for this fork is:
+  - rancher/rancher           @ v1.6.30
+  - rancher/cattle            @ v0.183.52.1
+  - rancher/agent             @ v0.13.11
+  - rancher/host-api          @ <latest tagged at 2020-05>
+  - rancher/rancher-net       @ <latest tagged at 2020-05>
+  - rancher/healthcheck       @ <latest tagged at 2020-05>
+  - rancher/scheduler         @ <latest tagged at 2020-05>
+  - rancher/rancher-metadata  @ <latest tagged at 2020-05>
+  - rancher/rancher-dns       @ <latest tagged at 2020-05>
+  - rancher/lb-service-haproxy@ v0.9.14
+  - rancher/rancher-catalog   @ master (frozen 2024-03-25)
+  - rancher/ui                @ <latest tagged at 2020-05>
+
+"Rancher" is a trademark of Rancher Labs, Inc. / SUSE. This project is an
+independent fork and is NOT affiliated with, endorsed by, or sponsored by
+Rancher Labs or SUSE. The "rancher-classic" name is used to denote the
+fork's lineage from the classic (1.x / Cattle-architecture) Rancher product.
+
+This project carries forward the original copyright headers in modified files
+and adds new copyright headers in newly authored files; see the source tree
+for per-file details.

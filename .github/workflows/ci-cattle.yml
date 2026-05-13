@@ -1,0 +1,15 @@
+name: cattle
+
+on:
+  push:
+    paths: ["components/cattle/**", ".github/workflows/_reusable-java-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/cattle/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-java-ci.yml
+    with:
+      java-version: "17"
+      image-name: rancher-classic/cattle

@@ -1,0 +1,15 @@
+name: agent
+
+on:
+  push:
+    paths: ["components/agent/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/agent/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: agent
+      image-name: rancher-classic/agent

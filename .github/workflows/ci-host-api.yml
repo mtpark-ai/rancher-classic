@@ -1,0 +1,15 @@
+name: host-api
+
+on:
+  push:
+    paths: ["components/host-api/**", ".github/workflows/_reusable-go-ci.yml"]
+    branches: [main]
+  pull_request:
+    paths: ["components/host-api/**"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/_reusable-go-ci.yml
+    with:
+      component: host-api
+      image-name: rancher-classic/host-api
