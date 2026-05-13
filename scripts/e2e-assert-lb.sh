@@ -16,7 +16,7 @@ fi
 ## Distinct container IDs over 30 requests — should hit ≥2 different
 ## replicas if VXLAN + LB are working correctly.
 declare -A seen
-for i in $(seq 1 30); do
+for _ in $(seq 1 30); do
     id=$(curl -fsSL "${LB_URL}/__rancher-classic-canary" -o /dev/null -w '%{header.server}' 2>/dev/null || true)
     [ -n "$id" ] && seen["$id"]=1
 done
