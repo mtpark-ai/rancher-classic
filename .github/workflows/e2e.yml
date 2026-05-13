@@ -1,14 +1,42 @@
 name: e2e
 
 on:
+  push:
+    paths:
+      - "scripts/e2e-*"
+      - ".github/workflows/e2e.yml"
+    branches: [main]
   workflow_dispatch: {}
   schedule:
     - cron: "0 6 * * *"   # nightly 06:00 UTC
 
 jobs:
+  lint:
+    # Cheap gate that runs on every push: validate the e2e scripts and
+    # compose file parse correctly. Does not need real Docker.
+    name: lint e2e scripts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: yamllint
+        run: pipx run yamllint -c .yamllint scripts/e2e-docker-compose.yml
+      - name: shellcheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -qq -y shellcheck
+          shellcheck scripts/e2e-*.sh
+      - name: docker compose config
+        run: docker compose -f scripts/e2e-docker-compose.yml config >/dev/null
+
   smoke:
+    # Heavy gate that runs nightly + on-demand. Brings up a real e2e
+    # cluster using DinD agents and exercises the Cattle API.
+    # Requires Phase 4 (agent) + Phase 3 (cattle) to actually pass.
+    # Gated on workflow_dispatch / cron for now so it doesn't block
+    # main on every push.
+    if: github.event_name != 'push'
     name: 1 server + 3 agents on Ubuntu 24.04 / Docker ${{ matrix.docker }}
     runs-on: ubuntu-24.04
+    needs: lint
     strategy:
       fail-fast: false
       matrix:
@@ -17,8 +45,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - name: build all images locally
-        run: scripts/build --all --tag e2e-${{ github.sha }}
-      - name: bring up e2e cluster (4 docker-in-docker hosts)
+        run: scripts/build --tag e2e-${{ github.sha }}
+      - name: bring up e2e cluster
         run: scripts/e2e-up.sh e2e-${{ github.sha }} ${{ matrix.docker }}
       - name: deploy nginx demo stack via Cattle API
         run: scripts/e2e-deploy-nginx.sh
@@ -27,3 +55,10 @@ jobs:
       - name: tear down
         if: always()
         run: scripts/e2e-down.sh
+      - name: upload e2e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs-docker-${{ matrix.docker }}
+          path: dist/e2e-logs/
+          retention-days: 7
