@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mtpark-ai/rancher-classic/net/firewall"
 	"github.com/mtpark-ai/rancher-classic/net/server"
 	"github.com/mtpark-ai/rancher-classic/net/vxlan"
 	"github.com/rancher/log"
@@ -62,6 +63,10 @@ func main() {
 func appMain(ctx *cli.Context) error {
 	if ctx.Bool("debug") {
 		log.SetLevelString("debug")
+	}
+
+	if err := firewall.CheckOrAbort(); err != nil {
+		return err
 	}
 
 	done := make(chan error)
